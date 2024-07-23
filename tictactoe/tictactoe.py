@@ -122,38 +122,54 @@ def printb(board):
     print(" ")
 
 def minimax(board):
-    results = minimax_inner(board)
-    for i in range(len(results)):
-        if results[i] == max(results):
-            return actions(board)[i]
+    import time
+    t0 = time.time()
+    (_, action) = minimax_inner(board)
+    t1 = time.time()
+    total = t1-t0
+    print(total)
+    return action
+                
 
 def minimax_inner(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    printb(board)
+    scores = []
     
-    if terminal(board):
+    if terminal(board): return (utility(board), None)
+    
+    for action in actions(board):
+        (score, act) = minimax_inner(result(copy.deepcopy(board), action))
+        scores.append(score)
+        
+    if player(board) == X:
+        for i in range(len(scores)):
+            if scores[i] == max(scores): return (scores[i], actions(board)[i])
+    else:
+        for i in range(len(scores)):
+            if scores[i] == min(scores): return (scores[i], actions(board)[i])
+
+        
+        
+        
+    """if terminal(board):
         return [utility(board)]
     
     new_board = copy.deepcopy(board)
-    new_states = [result(new_board, action) for action in actions(board)]
+    new_states = [result(new_board, action) for action in actions(new_board)]
     scores = []
     for state in new_states:
         if not terminal(state):
             temp = minimax(copy.deepcopy(state))
             if (player(state) == X):
-                return max(temp) if type(temp) == list else temp
-            elif (player(state) == O):
                 return min(temp) if type(temp) == list else temp
+            elif (player(state) == O):
+                return max(temp) if type(temp) == list else temp
         else:
+            print("here")
             scores.append(utility(state))
-    """if new_board == board:
-        for i in range(len(scores)):
-            if scores[i] == max(scores):
-                return actions(board)[i]
-    else:"""
-    return scores
+    return scores"""
 
     
     
