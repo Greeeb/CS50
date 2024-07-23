@@ -121,8 +121,8 @@ def printb(board):
         print(row)
     print(" ")
 
+import time
 def minimax(board):
-    import time
     t0 = time.time()
     (_, action) = minimax_inner(board)
     t1 = time.time()
