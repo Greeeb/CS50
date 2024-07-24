@@ -1,5 +1,6 @@
 import itertools
 import random
+import copy
 
 
 class Minesweeper():
@@ -105,7 +106,7 @@ class Sentence():
         """
         Returns the set of all cells in self.cells known to be mines.
         """
-        if len(self.cells) == self.count:
+        if (len(self.cells) == self.count) and (self.count != 0):
             return self.cells         
            
 
@@ -113,7 +114,7 @@ class Sentence():
         """
         Returns the set of all cells in self.cells known to be safe.
         """
-        if (self.count == 0) and (len(self.cells) != 0):
+        if (self.count == 0) and (len(self.cells) > 0):
             return self.cells
 
     def mark_mine(self, cell):
@@ -165,18 +166,22 @@ class MinesweeperAI():
         Marks a cell as a mine, and updates all knowledge
         to mark that cell as a mine as well.
         """
-        self.mines.add(cell)
-        for sentence in self.knowledge:
-            sentence.mark_mine(cell)
+        if cell not in self.mines:    
+            self.mines.add(cell)
+            for sentence in self.knowledge:
+                sentence.mark_mine(cell)
+            print("Marked mine: ", cell)
 
     def mark_safe(self, cell):
         """
         Marks a cell as safe, and updates all knowledge
         to mark that cell as safe as well.
         """
-        self.safes.add(cell)
-        for sentence in self.knowledge:
-            sentence.mark_safe(cell)
+        if cell not in self.safes:
+            self.safes.add(cell)
+            for sentence in self.knowledge:
+                sentence.mark_safe(cell)
+            print("Marked safe: ", cell)
 
     def add_knowledge(self, cell, count):
         """
@@ -206,15 +211,32 @@ class MinesweeperAI():
         nearby_cells = []
         for i in range(max(cell[0] - 1, 0), min(cell[0] + 2, self.height)):
             for j in range(max(cell[1] - 1, 0), min(cell[1] + 2, self.width)):
-                if ((i, j) != cell) and not ((i, j) in self.moves_made):
+                if ((i, j) != cell) and not ((i, j) in self.moves_made) and not ((i, j) in self.safes):
                     nearby_cells.append((i,j))
-                
-        self.knowledge.append(Sentence(cells=nearby_cells, 
+        
+        
+        print("Knowledge base:")
+        for knowledge in self.knowledge:
+            if knowledge.count != 0:
+                print(knowledge.cells, " - ", knowledge.count)
+        
+        
+        for knowledge in self.knowledge:
+            if list(knowledge.cells) in nearby_cells:
+                for item in list(knowledge.cells):
+                    nearby_cells = nearby_cells.remove(item)
+                count = count - (len(list(knowledge.cells)) + 1)
+        self.knowledge.append(Sentence(cells=nearby_cells,
                                        count=count))
         print("New:", nearby_cells, " - ", count)
         
         
-            
+        print("Knowledge base:")
+        for knowledge in self.knowledge:
+            if knowledge.count != 0:
+                print(knowledge.cells, " - ", knowledge.count)
+        
+        
         # mark any additional cells as safe or as mines
         # if it can be concluded based on the AI's knowledge base
         if count == 0:
@@ -226,23 +248,45 @@ class MinesweeperAI():
         if self.mines != set():
             for mine in self.mines:
                 self.mark_mine(mine)
+        
+        
+        print("Knowledge base:")
+        for knowledge in self.knowledge:
+            if knowledge.count != 0:
+                print(knowledge.cells, " - ", knowledge.count)
+                
                 
         for knowledge in self.knowledge:
-            if knowledge.count == len(knowledge.cells):
-                for cell in knowledge.cells:
+            if len(knowledge.cells) == knowledge.count:
+                temp = copy.deepcopy(knowledge.cells)
+                for cell in temp:
                     self.mark_mine(cell)
+                    knowledge.mark_mine(cell)
+                    
+                    
+        print("Knowledge base:")
+        for knowledge in self.knowledge:
+            if knowledge.count != 0:
+                print(knowledge.cells, " - ", knowledge.count)
+                
+                
+        """for knowledge in self.knowledge:
+            known_miles = knowledge.known_mines()
+            if known_miles != []:
+                for cell in known_miles:
+                    self.mark_mine(cell)"""
                     
         
         # add any new sentences to the AI's knowledge base
         # if they can be inferred from existing knowledge
-        for sentence in self.knowledge:
-            for subset in self.knowledge:
-                if (sentence != subset) and (subset.cells in sentence.cells):
-                    self.knowledge.append(
-                        Sentence(cells=(sentence.cells-subset.cells), 
-                                 count=(sentence.count-subset.count)))
-                    print("Update: ", sentence.cells-subset.cells, " - ", sentence.count-subset.count)
-        
+        """for i in range(len(self.knowledge)):
+            sentence = self.knowledge[i]
+            for j in range(len(self.knowledge)):
+                subset = self.knowledge[j] if j > i else self.knowledge[i]
+                if (sentence.cells != subset.cells) and (subset.cells.issubset(sentence.cells)):
+                    self.knowledge[i] = Sentence(cells=(sentence.cells-subset.cells), count=(sentence.count-subset.count))
+                    print("Update: ", sentence.cells-subset.cells, " - ", sentence.count-subset.count)"""
+    
         
         
         """print("Safes: ", self.safes)"""
@@ -263,12 +307,13 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        try:
-            for cell in self.safes:
-                if cell not in self.moves_made:
-                    return cell
-        except:
-            pass
+        """try:"""
+        safes = list(self.safes) # [::-1]
+        for cell in safes:
+            if cell not in self.moves_made:
+                return cell
+        """except:
+            pass"""
         
     def make_random_move(self):
         """
