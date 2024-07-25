@@ -122,6 +122,7 @@ class Sentence():
         Updates internal knowledge representation given the fact that
         a cell is known to be a mine.
         """
+        print(self.cells, " - ", self.count)
         try:
             self.cells.remove(cell)
         except:
@@ -129,16 +130,21 @@ class Sentence():
         
         if self.count > 0:
             self.count -= 1
+            
+        print(self.cells, " - ", self.count)
 
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
+        print(self.cells, " - ", self.count)
         try:
             self.cells.remove(cell)
         except:
             pass
+        
+        print(self.cells, " - ", self.count)
 
 class MinesweeperAI():
     """
@@ -170,7 +176,8 @@ class MinesweeperAI():
             self.mines.add(cell)
             for sentence in self.knowledge:
                 sentence.mark_mine(cell)
-            # print("Marked mine: ", cell)
+            print("Marked mine: ", cell)
+            print(" ")
 
     def mark_safe(self, cell):
         """
@@ -181,7 +188,8 @@ class MinesweeperAI():
             self.safes.add(cell)
             for sentence in self.knowledge:
                 sentence.mark_safe(cell)
-            # print("Marked safe: ", cell)
+            print("Marked safe: ", cell)
+            print(" ")
 
     def add_knowledge(self, cell, count):
         """
@@ -222,13 +230,13 @@ class MinesweeperAI():
         
         
         for knowledge in self.knowledge:
-            if list(knowledge.cells) in nearby_cells:
+            if knowledge.cells.issubset(set(nearby_cells)):
                 for item in list(knowledge.cells):
                     nearby_cells = nearby_cells.remove(item)
                 count = count - (len(list(knowledge.cells)) + 1)
         self.knowledge.append(Sentence(cells=nearby_cells,
                                        count=count))
-        # print("New:", nearby_cells, " - ", count)
+        """print("New:", nearby_cells, " - ", count)"""
         
         
         """print("Knowledge base:")
