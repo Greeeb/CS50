@@ -170,7 +170,7 @@ class MinesweeperAI():
             self.mines.add(cell)
             for sentence in self.knowledge:
                 sentence.mark_mine(cell)
-            print("Marked mine: ", cell)
+            # print("Marked mine: ", cell)
 
     def mark_safe(self, cell):
         """
@@ -181,7 +181,7 @@ class MinesweeperAI():
             self.safes.add(cell)
             for sentence in self.knowledge:
                 sentence.mark_safe(cell)
-            print("Marked safe: ", cell)
+            # print("Marked safe: ", cell)
 
     def add_knowledge(self, cell, count):
         """
@@ -215,10 +215,10 @@ class MinesweeperAI():
                     nearby_cells.append((i,j))
         
         
-        print("Knowledge base:")
+        """print("Knowledge base:")
         for knowledge in self.knowledge:
             if knowledge.count != 0:
-                print(knowledge.cells, " - ", knowledge.count)
+                print(knowledge.cells, " - ", knowledge.count)"""
         
         
         for knowledge in self.knowledge:
@@ -228,13 +228,13 @@ class MinesweeperAI():
                 count = count - (len(list(knowledge.cells)) + 1)
         self.knowledge.append(Sentence(cells=nearby_cells,
                                        count=count))
-        print("New:", nearby_cells, " - ", count)
+        # print("New:", nearby_cells, " - ", count)
         
         
-        print("Knowledge base:")
+        """print("Knowledge base:")
         for knowledge in self.knowledge:
             if knowledge.count != 0:
-                print(knowledge.cells, " - ", knowledge.count)
+                print(knowledge.cells, " - ", knowledge.count)"""
         
         
         # mark any additional cells as safe or as mines
@@ -250,10 +250,10 @@ class MinesweeperAI():
                 self.mark_mine(mine)
         
         
-        print("Knowledge base:")
+        """print("Knowledge base:")
         for knowledge in self.knowledge:
             if knowledge.count != 0:
-                print(knowledge.cells, " - ", knowledge.count)
+                print(knowledge.cells, " - ", knowledge.count)"""
                 
                 
         for knowledge in self.knowledge:
@@ -264,18 +264,11 @@ class MinesweeperAI():
                     knowledge.mark_mine(cell)
                     
                     
-        print("Knowledge base:")
+        """print("Knowledge base:")
         for knowledge in self.knowledge:
             if knowledge.count != 0:
-                print(knowledge.cells, " - ", knowledge.count)
+                print(knowledge.cells, " - ", knowledge.count)"""
                 
-                
-        """for knowledge in self.knowledge:
-            known_miles = knowledge.known_mines()
-            if known_miles != []:
-                for cell in known_miles:
-                    self.mark_mine(cell)"""
-                    
         
         # add any new sentences to the AI's knowledge base
         # if they can be inferred from existing knowledge
@@ -290,13 +283,13 @@ class MinesweeperAI():
         
         
         """print("Safes: ", self.safes)"""
-        print("Mines: ", self.mines)
+        """print("Mines: ", self.mines)
         print("Knowledge base:")
         for knowledge in self.knowledge:
             if knowledge.count != 0:
-                print(knowledge.cells, " - ", knowledge.count)
+                print(knowledge.cells, " - ", knowledge.count)"""
                 
-        print("Safes left: ", len(self.safes) - len(self.moves_made))
+        """print("Safes left: ", len(self.safes) - len(self.moves_made))"""
 
     def make_safe_move(self):
         """
