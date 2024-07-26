@@ -10,15 +10,16 @@ SAMPLES = 10000
 def main():
     """if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")"""
-    corpus = crawl("c:/Users/daniil.navodey/Documents/CS50/pagerank/corpus0")
-    ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
-    print(f"PageRank Results from Sampling (n = {SAMPLES})")
-    for page in sorted(ranks):
-        print(f"  {page}: {ranks[page]:.4f}")
-    ranks = iterate_pagerank(corpus, DAMPING)
-    print(f"PageRank Results from Iteration")
-    for page in sorted(ranks):
-        print(f"  {page}: {ranks[page]:.4f}")
+    for i in range(3):
+        corpus = crawl(fr"c:/Users/daniil.navodey/Documents/CS50/pagerank/corpus{i}")
+        ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
+        print(f"PageRank Results from Sampling (n = {SAMPLES})")
+        for page in sorted(ranks):
+            print(f"  {page}: {ranks[page]:.4f}")
+        ranks = iterate_pagerank(corpus, DAMPING)
+        print(f"PageRank Results from Iteration")
+        for page in sorted(ranks):
+            print(f"  {page}: {ranks[page]:.4f}")
 
 
 def crawl(directory):
@@ -70,7 +71,8 @@ def transition_model(corpus, page, damping_factor):
         if corpus[page] != set():
             if goal_page in corpus[page]:
                 page_rank[goal_page] = damping_factor / len(corpus[page]) + (1 - damping_factor) / len(corpus)
-                #print("avg")
+                # print(corpus[page])
+                # print(page_rank[goal_page])
             else:
                 page_rank[goal_page] = (1 - damping_factor) / len(corpus)
                 #print("random")
@@ -79,8 +81,8 @@ def transition_model(corpus, page, damping_factor):
             #print("empty set")
 
     return page_rank
-    
-    
+
+
 def sample_pagerank(corpus, damping_factor, n):
     """
     Return PageRank values for each page by sampling `n` pages
@@ -91,22 +93,34 @@ def sample_pagerank(corpus, damping_factor, n):
     PageRank values should sum to 1.
     """
     global_page_rank = {}
+    for key in corpus.keys():
+        global_page_rank[key] = 0
+    
     temp_page_rank = {}
     for i in range(n):
         if i == 0:
             page = list(corpus.keys())[random.randint(0, len(corpus.keys()) - 1)]
         else:
-            page = max(temp_page_rank, key=temp_page_rank.get)
+            page = random.choices(list(corpus.keys()), temp_page_rank.values())[0]
+                    
+        global_page_rank[page] += 1
         temp_page_rank = transition_model(corpus, page, damping_factor)
-        for temp in temp_page_rank.keys():
-            if temp in global_page_rank.keys():
-                global_page_rank[temp] = temp_page_rank[temp] + global_page_rank[temp]
-            else:
-                global_page_rank[temp] = temp_page_rank[temp]
+        
     for page in global_page_rank.keys():
         global_page_rank[page] = global_page_rank[page] / n
     
     return global_page_rank
+
+
+def iterative_calculation(corpus, page, page_rank, damping_factor):
+    sum = 0
+    for goal_page in corpus[page]:
+        sum += page_rank[goal_page] / len(corpus[goal_page]) if corpus[goal_page] != set() else 0
+        # print(sum)
+    page_rank[page] = (1-damping_factor)/len(corpus) + damping_factor*sum
+    # print(page_rank[page])
+    
+    return page_rank
 
 
 def iterate_pagerank(corpus, damping_factor):
@@ -118,28 +132,23 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
+    import copy
     global_page_rank = {}
     N = len(corpus)
-    accuracy = 1 / N
+    accuracy = 1.000
     
     for key in corpus.keys():
         global_page_rank[key] = 1 / N
     
-    while accuracy > 0.001:
-        if accuracy == 1/N:
-            page = list(corpus.keys())[random.randint(0, len(corpus.keys()) - 1)]
-        else:
-            page = max(temp_page_rank, key=temp_page_rank.get)
-            
-        temp_page_rank = transition_model(corpus, page, damping_factor)
-        print(temp_page_rank)
-        accuracy_list = []
-        for temp in temp_page_rank.keys():
-            accuracy_list.append(min(abs(global_page_rank[temp] - temp_page_rank[temp]), accuracy))
-            accuracy = max(accuracy_list)
-            global_page_rank[temp] = temp_page_rank[temp]
-            print(temp, accuracy)
+    while accuracy > 0.0001:
+        page = random.choices(list(corpus.keys()), list(global_page_rank.values()))[0]
+        temp_page_rank = iterative_calculation(corpus, page, copy.deepcopy(global_page_rank), damping_factor)
+        accuracy = abs(temp_page_rank[page] - global_page_rank[page]) if corpus[page] != set() else 1
+        if accuracy == 0:
+            accuracy = 0.1
+        global_page_rank = copy.deepcopy(temp_page_rank)
     
+    print(corpus)
     return global_page_rank
 
 
