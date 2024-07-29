@@ -40,58 +40,61 @@ PROBS = {
 def main():
 
     # Check for proper usage
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python heredity.py data.csv")
-    people = load_data(sys.argv[1])
+    
+    """if len(sys.argv) != 2:
+        sys.exit("Usage: python heredity.py data.csv")"""
+    for i in range(3):
+        path = f"c:/Users/daniil.navodey/Documents/CS50/heredity/data/family{i}.csv"
+        people = load_data(path)# sys.argv[1])
 
-    # Keep track of gene and trait probabilities for each person
-    probabilities = {
-        person: {
-            "gene": {
-                2: 0,
-                1: 0,
-                0: 0
-            },
-            "trait": {
-                True: 0,
-                False: 0
+        # Keep track of gene and trait probabilities for each person
+        probabilities = {
+            person: {
+                "gene": {
+                    2: 0,
+                    1: 0,
+                    0: 0
+                },
+                "trait": {
+                    True: 0,
+                    False: 0
+                }
             }
+            for person in people
         }
-        for person in people
-    }
 
-    # Loop over all sets of people who might have the trait
-    names = set(people)
-    for have_trait in powerset(names):
+        # Loop over all sets of people who might have the trait
+        names = set(people)
+        for have_trait in powerset(names):
 
-        # Check if current set of people violates known information
-        fails_evidence = any(
-            (people[person]["trait"] is not None and
-             people[person]["trait"] != (person in have_trait))
-            for person in names
-        )
-        if fails_evidence:
-            continue
+            # Check if current set of people violates known information
+            fails_evidence = any(
+                (people[person]["trait"] is not None and
+                people[person]["trait"] != (person in have_trait))
+                for person in names
+            )
+            if fails_evidence:
+                continue
 
-        # Loop over all sets of people who might have the gene
-        for one_gene in powerset(names):
-            for two_genes in powerset(names - one_gene):
+            # Loop over all sets of people who might have the gene
+            for one_gene in powerset(names):
+                for two_genes in powerset(names - one_gene):
 
-                # Update probabilities with new joint probability
-                p = joint_probability(people, one_gene, two_genes, have_trait)
-                update(probabilities, one_gene, two_genes, have_trait, p)
+                    # Update probabilities with new joint probability
+                    p = joint_probability(people, one_gene, two_genes, have_trait)
+                    update(probabilities, one_gene, two_genes, have_trait, p)
 
-    # Ensure probabilities sum to 1
-    normalize(probabilities)
+        # Ensure probabilities sum to 1
+        normalize(probabilities)
 
-    # Print results
-    for person in people:
-        print(f"{person}:")
-        for field in probabilities[person]:
-            print(f"  {field.capitalize()}:")
-            for value in probabilities[person][field]:
-                p = probabilities[person][field][value]
-                print(f"    {value}: {p:.4f}")
+        # Print results
+        for person in people:
+            print(f"{person}:")
+            for field in probabilities[person]:
+                print(f"  {field.capitalize()}:")
+                for value in probabilities[person][field]:
+                    p = probabilities[person][field][value]
+                    print(f"    {value}: {p:.4f}")
 
 
 def load_data(filename):
@@ -144,7 +147,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
              "child": None}
     temp = None
     for x in people.keys():
-        if people[x]["mother"] != None:
+        if people[x]["mother"] == None:
             family["parents"][x] = None
         else: temp = x
     family["child"] = temp
@@ -160,7 +163,7 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         trait = False if parent not in have_trait else True
         
         p.append(PROBS["gene"][i] * PROBS["trait"][i][trait])
-        family["parents"][parent["name"]] = i
+        family["parents"][parent] = i
     
     # child
     child_name = family["child"]
@@ -174,27 +177,33 @@ def joint_probability(people, one_gene, two_genes, have_trait):
     probability = 0
     i1 = family["parents"][list(family["parents"].keys())[0]]
     i2 = family["parents"][list(family["parents"].keys())[1]]
-    match i:
-        case 0:
-            if i1==0 and i2==0:
-                probability = (1-PROBS["mutation"])**2
-            elif i1==0 or i2==0:
-                probability = (1-PROBS["mutation"])*PROBS["mutation"]*(i1+i2)
-            elif i1==1 or i2==1:
-                
-        case 1:
-            
-            probability
-        case 2:
-            
-            probability
-         
     
-    if  == 2 * i:
-        if i == 2:
-            probability = (1-PROBS["mutation"])**2
-        else:    
-            probability = PROBS["mutation"]**2 + (1-PROBS["mutation"])**2
+    if i1==i2:
+        if i==1:
+            probability = (1-PROBS["mutation"])*PROBS["mutation"]*2 if i1!=1 else (1-PROBS["mutation"])*PROBS["mutation"]*0.25
+        elif i==2:
+            if i1==0:
+                probability = PROBS["mutation"]**2
+            else:
+                probability = (1-PROBS["mutation"])**2*i1/2*i2/2
+        else:
+            if i1==0:
+                probability = (1-PROBS["mutation"])**2
+            else:
+                probability = PROBS["mutation"]**2*i1/2*i2/2
+    elif i1==0 or i2==0:
+        if i!=1:
+            probability = (1-PROBS["mutation"])*PROBS["mutation"]*(i1+i2)/2
+        else:
+            probability = (PROBS["mutation"]**2 + (1-PROBS["mutation"])**2)*(i1+i2)/2
+    else:
+        if i==0:
+            probability = PROBS["mutation"]**2 * 0.5
+        elif i==1:
+            probability = (1-PROBS["mutation"])*PROBS["mutation"]
+        else:
+            probability = (1-PROBS["mutation"])**2 * 0.5
+            
     
     probability = probability * PROBS["trait"][i][trait]
     
@@ -210,7 +219,18 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    raise NotImplementedError
+    for person in probabilities.keys():
+        if (person not in one_gene) and (person not in two_genes):
+            i = 0
+        else:
+            i = 1 if person in one_gene else 2 
+            
+        trait = False if person not in have_trait else True
+        
+        probabilities[person]["gene"][i] += p
+        probabilities[person]["trait"][trait] += p
+
+        
 
 
 def normalize(probabilities):
@@ -218,7 +238,17 @@ def normalize(probabilities):
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    raise NotImplementedError
+    sum = 0
+    for person in probabilities.keys():
+        sum = probabilities[person]["gene"][0] + probabilities[person]["gene"][1] + probabilities[person]["gene"][2]
+        for i in range(3):
+            probabilities[person]["gene"][i] = probabilities[person]["gene"][i]/sum
+        
+        sum = probabilities[person]["trait"][True] + probabilities[person]["trait"][False]
+        probabilities[person]["trait"][True] = probabilities[person]["trait"][True]/sum
+        probabilities[person]["trait"][False] = probabilities[person]["trait"][False]/sum
+     
+    return probabilities
 
 
 if __name__ == "__main__":
