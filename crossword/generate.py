@@ -117,14 +117,17 @@ class CrosswordCreator():
         revision = False
         x_values = copy.deepcopy(self.domains[x])
         y_values = copy.deepcopy(self.domains[y])
-        overlaps = self.crossword.overlaps()[x, y]
+        overlaps = self.crossword.overlaps[x, y]
         for x_value in x_values:
             for y_value in y_values:
                 if overlaps != None:
-                    for (i,j) in overlaps:
-                        if x_value[i] != y_value[j]:
+                    (i,j) = overlaps
+                    if x_value[i] != y_value[j]:
+                        try:
                             self.domains[x].remove(x_value)
-                            revision = True
+                        except:
+                            pass
+                        revision = True
         return revision
                 
                 
@@ -138,12 +141,16 @@ class CrosswordCreator():
         return False if one or more domains end up empty.
         """
         if arcs == None:
-            arcs = list(self.crossword.overlaps().keys())
+            arcs = list(self.crossword.overlaps.keys())
         
         for (x, y) in arcs:
             if self.revise(x, y):
+                if len(self.domains[x]) == 0 or len(self.domains[y]) == 0:
+                    return False
                 for arc in [temp for temp in arcs if x not in temp]:
                     arcs.append(arc)
+                    
+        return True
                 
 
     def assignment_complete(self, assignment):
@@ -151,14 +158,28 @@ class CrosswordCreator():
         Return True if `assignment` is complete (i.e., assigns a value to each
         crossword variable); return False otherwise.
         """
-        raise NotImplementedError
+        for variable in assignment.keys():
+            if len(assignment[variable]) != 1:
+                return False
+        return True
 
     def consistent(self, assignment):
         """
         Return True if `assignment` is consistent (i.e., words fit in crossword
         puzzle without conflicting characters); return False otherwise.
         """
-        raise NotImplementedError
+        values = []
+        for variable in assignment.keys():
+            print(assignment[variable])
+            if assignment[variable] in values:
+                return False
+            else:
+                values.append(assignment[variable])
+            
+            if variable.length != assignment[variable]:
+                return False
+            
+        return True
 
     def order_domain_values(self, var, assignment):
         """
