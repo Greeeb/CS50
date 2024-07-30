@@ -2,6 +2,7 @@ import os
 import random
 import re
 import sys
+from tracemalloc import start
 
 DAMPING = 0.85
 SAMPLES = 10000
@@ -114,10 +115,13 @@ def sample_pagerank(corpus, damping_factor, n):
 
 def iterative_calculation(corpus, page, page_rank, damping_factor):
     sum = 0
-    for goal_page in corpus[page]:
-        sum += page_rank[goal_page] / len(corpus[goal_page]) if corpus[goal_page] != set() else 0
-        # print(sum)
-    page_rank[page] = (1-damping_factor)/len(corpus) + damping_factor*sum
+    counter = 0
+    for start_page in corpus.keys():
+        if start_page != page and page in corpus[start_page]:
+            sum += page_rank[start_page]
+            counter += 1
+
+    page_rank[page] = (1-damping_factor)/len(corpus) + damping_factor*sum/counter
     # print(page_rank[page])
     
     return page_rank
@@ -140,12 +144,10 @@ def iterate_pagerank(corpus, damping_factor):
     for key in corpus.keys():
         global_page_rank[key] = 1 / N
     
-    while accuracy > 0.0001:
+    while accuracy > 0.01:
         page = random.choices(list(corpus.keys()), list(global_page_rank.values()))[0]
         temp_page_rank = iterative_calculation(corpus, page, copy.deepcopy(global_page_rank), damping_factor)
         accuracy = abs(temp_page_rank[page] - global_page_rank[page]) if corpus[page] != set() else 1
-        if accuracy == 0:
-            accuracy = 0.1
         global_page_rank = copy.deepcopy(temp_page_rank)
     
     print(corpus)
