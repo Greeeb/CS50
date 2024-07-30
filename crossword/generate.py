@@ -1,7 +1,7 @@
 import sys
 
 from crossword import *
-
+import copy
 
 class CrosswordCreator():
 
@@ -99,7 +99,11 @@ class CrosswordCreator():
         (Remove any values that are inconsistent with a variable's unary
          constraints; in this case, the length of the word.)
         """
-        raise NotImplementedError
+        for variable in self.domains.keys():
+            temp = copy.deepcopy(self.domains[variable])
+            for value in temp:
+                if len(value) != variable.length:
+                    self.domains[variable].remove(value)
 
     def revise(self, x, y):
         """
@@ -110,8 +114,20 @@ class CrosswordCreator():
         Return True if a revision was made to the domain of `x`; return
         False if no revision was made.
         """
-        raise NotImplementedError
-
+        revision = False
+        x_values = copy.deepcopy(self.domains[x])
+        y_values = copy.deepcopy(self.domains[y])
+        overlaps = self.crossword.overlaps()[x, y]
+        for x_value in x_values:
+            for y_value in y_values:
+                if overlaps != None:
+                    for (i,j) in overlaps:
+                        if x_value[i] != y_value[j]:
+                            self.domains[x].remove(x_value)
+                            revision = True
+        return revision
+                
+                
     def ac3(self, arcs=None):
         """
         Update `self.domains` such that each variable is arc consistent.
@@ -121,7 +137,14 @@ class CrosswordCreator():
         Return True if arc consistency is enforced and no domains are empty;
         return False if one or more domains end up empty.
         """
-        raise NotImplementedError
+        if arcs == None:
+            arcs = list(self.crossword.overlaps().keys())
+        
+        for (x, y) in arcs:
+            if self.revise(x, y):
+                for arc in [temp for temp in arcs if x not in temp]:
+                    arcs.append(arc)
+                
 
     def assignment_complete(self, assignment):
         """
@@ -177,9 +200,9 @@ def main():
     for i in range(3):
         for j in range(3):
             # Parse command-line arguments
-            structure = f"C:\Users\daniil.navodey\Documents\CS50\crossword\data\structure{i}.txt" # sys.argv[1]
-            words = f"C:\Users\daniil.navodey\Documents\CS50\crossword\data\words{j}.txt" # sys.argv[2]
-            output = f"C:\Users\daniil.navodey\Documents\CS50\crossword\image[{i},{j}].png" # sys.argv[3] if len(sys.argv) == 4 else None
+            structure = rf"C:\Users\daniil.navodey\Documents\CS50\crossword\data\structure{i}.txt" # sys.argv[1]
+            words = rf"C:\Users\daniil.navodey\Documents\CS50\crossword\data\words{j}.txt" # sys.argv[2]
+            output = rf"C:\Users\daniil.navodey\Documents\CS50\crossword\structure-{i},words-{j}.png" # sys.argv[3] if len(sys.argv) == 4 else None
 
             # Generate crossword
             crossword = Crossword(structure, words)
