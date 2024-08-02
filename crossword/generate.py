@@ -61,7 +61,7 @@ class CrosswordCreator():
              self.crossword.height * cell_size),
             "black"
         )
-        font = ImageFont.truetype("assets/fonts/OpenSans-Regular.ttf", 80)
+        font = ImageFont.truetype(r"C:\Users\daniil.navodey\Documents\CS50\crossword\assets\fonts\OpenSans-Regular.ttf", 80)
         draw = ImageDraw.Draw(img)
 
         for i in range(self.crossword.height):
@@ -89,8 +89,12 @@ class CrosswordCreator():
         """
         Enforce node and arc consistency, and then solve the CSP.
         """
+        # print("initial domains\n", self.domains)
         self.enforce_node_consistency()
-        self.ac3()
+        # print("node consistency domains\n", self.domains)
+        if not self.ac3():
+            # print("ac3 domains\n", self.domains)
+            return None
         return self.backtrack(dict())
 
     def enforce_node_consistency(self):
@@ -118,16 +122,22 @@ class CrosswordCreator():
         x_values = copy.deepcopy(self.domains[x])
         y_values = copy.deepcopy(self.domains[y])
         overlaps = self.crossword.overlaps[x, y]
+        # print("revision:", x, y, "overlaping in:", overlaps)
+        if overlaps == None:
+            return revision
         for x_value in x_values:
+            solution = False
             for y_value in y_values:
                 if overlaps != None:
                     (i,j) = overlaps
-                    if x_value[i] != y_value[j]:
-                        try:
-                            self.domains[x].remove(x_value)
-                        except:
-                            pass
-                        revision = True
+                    if x_value[i] == y_value[j]:
+                        solution = True
+            if not solution:
+                try:
+                    self.domains[x].remove(x_value)
+                    revision = True
+                except:
+                    pass
         return revision
                 
                 
@@ -142,13 +152,15 @@ class CrosswordCreator():
         """
         if arcs == None:
             arcs = list(self.crossword.overlaps.keys())
-        
+        # print("arcs\n" , arcs)
         for (x, y) in arcs:
+            # print(self.domains)
             if self.revise(x, y):
                 if len(self.domains[x]) == 0 or len(self.domains[y]) == 0:
                     return False
                 for arc in [temp for temp in arcs if x not in temp]:
                     arcs.append(arc)
+                    # print("appended")
                     
         return True
                 
@@ -172,24 +184,29 @@ class CrosswordCreator():
         """
         values = []
         for variable in assignment.keys():
-            print(assignment[variable])
+            # print(assignment[variable])
             if assignment[variable] in values:
                 return False
             else:
                 values.append(assignment[variable])
             
-            if variable.length != assignment[variable]:
+            if variable.length != len(assignment[variable]):
                 return False
             
-            temp = [
-                self.crossword.overlaps[list(self.crossword.overlaps.keys())[i]] for i in range(len(list(self.crossword.overlaps.keys())))
-                if variable in list(self.crossword.overlaps.keys())[i]
-            ]
-            for x in temp:
-                (i, j) = self.crossword.overlaps[x]
-                if x[0][i] != x[1][j]:
-                    return False
-            
+            for x in assignment.keys():
+                for y in list(assignment.keys()):
+                    if y != x:
+                        (i, j) = (None, None)
+                        try:
+                            (i, j) = self.crossword.overlaps[(x, y)]
+                            (j, i) = self.crossword.overlaps[(y, x)]
+                        except:
+                            pass
+                        # print(assignment[x], assignment[y], (i,j))
+                        if (i, j) != (None, None) and assignment[x][i] != assignment[y][j]:
+                            return False
+
+        # print("consistent")
         return True
 
     def order_domain_values(self, var, assignment):
@@ -199,18 +216,17 @@ class CrosswordCreator():
         The first value in the list, for example, should be the one
         that rules out the fewest values among the neighbors of `var`.
         """
+        # print(var)
+        # print(self.domains[var])
         neighbors = self.crossword.neighbors(var)
         constrains = {}
         for value in self.domains[var]:
             counter = 0
             for node in neighbors:
-                (i, j) = [self.crossword.overlaps[x] for x in range(len(self.crossword.overlaps))
-                          if self.crossword.overlaps[x] == (var, node) or self.crossword.overlaps[x] == (node, var)][0]
-                if value[i] == node[j]:
-                    print("constrain")
-                    counter += 1
+                if value in self.domains[node]:
+                    counter +=1
             constrains[value] = counter
-            
+        # print("constrains", constrains)
         return list({k: v for k, v in sorted(constrains.items(), key=lambda item: item[1])}.keys())
 
         
@@ -232,8 +248,11 @@ class CrosswordCreator():
                         result = (variable, len(self.domains[variable]))
                     elif len(self.domains[variable]) == list(result)[1]:
                         result = (variable, len(self.domains[variable])) if len(self.crossword.neighbors(variable))>len(self.crossword.neighbors(list(result)[0])) else result
-
-        return list(result)[0]
+        
+        try:
+            return list(result)[0]
+        except:
+            return None
                 
     def backtrack(self, assignment):
         """
@@ -246,9 +265,24 @@ class CrosswordCreator():
         """
         while not self.assignment_complete(assignment):
             variable = self.select_unassigned_variable(assignment)
-            
-            
-            
+            if type(variable) != Variable:
+                return assignment if self.consistent(assignment) else None 
+            values = self.order_domain_values(variable, assignment)
+            i = 0
+            while i < len(values) and values[i] in assignment.values():
+                i += 1
+            value = values[i] 
+            # print("value", value)
+            temp = copy.deepcopy(assignment)
+            temp[variable] = value
+            if self.consistent(temp):
+                assignment[variable] = value
+                print(assignment)
+            else:
+                self.domains[variable].remove(value)
+            self.enforce_node_consistency()
+            self.ac3()
+            # print(self.domains)
         return assignment if self.consistent(assignment) else None 
 
 def main():
@@ -263,12 +297,13 @@ def main():
             structure = rf"C:\Users\daniil.navodey\Documents\CS50\crossword\data\structure{i}.txt" # sys.argv[1]
             words = rf"C:\Users\daniil.navodey\Documents\CS50\crossword\data\words{j}.txt" # sys.argv[2]
             output = rf"C:\Users\daniil.navodey\Documents\CS50\crossword\structure-{i},words-{j}.png" # sys.argv[3] if len(sys.argv) == 4 else None
-
+            print(f"\nstructure-{i},words-{j}")
+            
             # Generate crossword
             crossword = Crossword(structure, words)
             creator = CrosswordCreator(crossword)
             assignment = creator.solve()
-
+            
             # Print result
             if assignment is None:
                 print("No solution.")
