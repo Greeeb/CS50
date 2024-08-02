@@ -141,12 +141,6 @@ class CrosswordCreator():
         return False if one or more domains end up empty.
         """
         if arcs == None:
-            arcs = list(self.domains.keys())
-            
-        
-        
-        
-        if arcs == None:
             arcs = list(self.crossword.overlaps.keys())
         
         for (x, y) in arcs:
@@ -256,8 +250,6 @@ class CrosswordCreator():
             
             
         return assignment if self.consistent(assignment) else None 
-        
-
 
 def main():
 
