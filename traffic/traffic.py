@@ -40,11 +40,11 @@ def main():
         # Evaluate neural network performance
         model.evaluate(x_test,  y_test, verbose=2)
 
-        # Save model to file
+        """# Save model to file
         if len(sys.argv) == 3:
             filename = sys.argv[2]
             model.save(filename)
-            print(f"Model saved to {filename}.")
+            print(f"Model saved to {filename}.")"""
             
         filename = fr"C:\Users\daniil.navodey\Documents\CS50\traffic\{i}"
         model.save(filename)
