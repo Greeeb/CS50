@@ -3,6 +3,7 @@ import numpy as np
 import os
 import sys
 import tensorflow as tf
+from tensorflow.keras import layers, models
 
 from sklearn.model_selection import train_test_split
 
@@ -18,37 +19,38 @@ def main():
     """# Check command-line arguments
     if len(sys.argv) not in [2, 3]:
         sys.exit("Usage: python traffic.py data_directory [model.h5]")"""
-    
-    for i in range(1):
-        filepath = fr"C:\Users\daniil.navodey\Documents\CS50\traffic\gtsrb\{i}"
+    filepath = os.path.abspath(sys.argv[0] + f"{os.sep}..")
 
-        # Get image arrays and labels for all image files
-        images, labels = load_data(filepath) # sys.argv[1])
+    # Get image arrays and labels for all image files
+    images, labels = load_data(filepath) # sys.argv[1])
 
-        # Split data into training and testing sets
-        labels = tf.keras.utils.to_categorical(labels)
-        x_train, x_test, y_train, y_test = train_test_split(
-            np.array(images), np.array(labels), test_size=TEST_SIZE
-        )
+    # Split data into training and testing sets
+    labels = tf.keras.utils.to_categorical(labels)
+    x_train, x_test, y_train, y_test = train_test_split(
+        np.array(images), np.array(labels), test_size=TEST_SIZE
+    )
+    print(len(images), len(labels))
+    print(images[0].shape, labels[0])
 
-        # Get a compiled neural network
-        model = get_model()
+    # Get a compiled neural network
+    model = get_model()
 
-        # Fit model on training data
-        model.fit(x_train, y_train, epochs=EPOCHS)
+    # Fit model on training data
+    model.fit(x_train, y_train, epochs=EPOCHS)
 
-        # Evaluate neural network performance
-        model.evaluate(x_test,  y_test, verbose=2)
+    # Evaluate neural network performance
+    model.evaluate(x_test,  y_test, verbose=2)
 
-        """# Save model to file
-        if len(sys.argv) == 3:
-            filename = sys.argv[2]
-            model.save(filename)
-            print(f"Model saved to {filename}.")"""
-            
-        filename = fr"C:\Users\daniil.navodey\Documents\CS50\traffic\{i}"
+    """# Save model to file
+    if len(sys.argv) == 3:
+        filename = sys.argv[2]
         model.save(filename)
-        print(f"Model saved to {filename}.")
+        print(f"Model saved to {filename}.")"""
+    
+    # saving a model to a file to be able to reuse the model
+    filename = fr"C:\Users\daniil.navodey\Documents\CS50\traffic\model.keras"
+    model.save(filename)
+    print(f"Model saved to {filename}.")
 
 
 def load_data(data_dir):
@@ -65,7 +67,23 @@ def load_data(data_dir):
     be a list of integer labels, representing the categories for each of the
     corresponding `images`.
     """
-    raise NotImplementedError
+    images = []
+    labels = []
+    print("Loading data from folders:")
+    import tqdm
+    
+    for i in tqdm.tqdm(range(NUM_CATEGORIES)):
+        # joining the filepath to each folder
+        filepath = os.path.abspath(f"traffic/gtsrb/{i}")
+        
+        # traversing through all the riles in directory
+        for file in os.listdir(filepath):
+            #appending images and labels array with data from the file
+            images.append(np.ndarray((IMG_HEIGHT, IMG_WIDTH, 3),cv2.imread(os.path.join(filepath, file)).dtype))
+            labels.append(i)
+                    
+    return images, labels
+        
 
 
 def get_model():
@@ -74,8 +92,23 @@ def get_model():
     `input_shape` of the first layer is `(IMG_WIDTH, IMG_HEIGHT, 3)`.
     The output layer should have `NUM_CATEGORIES` units, one for each category.
     """
-    raise NotImplementedError
-
+    model = models.Sequential([
+        layers.Conv2D(32, (5, 5), activation='relu', input_shape=(IMG_HEIGHT, IMG_WIDTH, 3)),
+        layers.MaxPooling2D((2,2)),
+        layers.Flatten(),
+        layers.Dense(128, activation="relu"),
+        layers.Dropout(0.5),
+        # layers.Dense(64, activation='relu'),
+        layers.Dense(NUM_CATEGORIES, activation="softmax")
+        ])
+    model.summary()
+    model.compile(optimizer='adam',
+              loss="categorical_crossentropy",
+              metrics=['accuracy'])
+    
+    return model
+    
+    
 
 if __name__ == "__main__":
     main()
