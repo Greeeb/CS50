@@ -106,7 +106,7 @@ def get_model():
     """
     model = models.Sequential([
         # tf.keras.Input((IMG_WIDTH, IMG_HEIGHT, 3)),
-        layers.Conv2D(64, (3, 3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
+        layers.Conv2D(64, (3, 3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3), batch_size=None),
         layers.MaxPooling2D(2, 2),
         layers.Conv2D(32, (3, 3), activation='relu'),
         layers.MaxPooling2D(2, 2),
