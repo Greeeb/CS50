@@ -1,5 +1,6 @@
 import nltk # natural language took kit
 import sys
+import os
 
 TERMINALS = """
 Adj -> "country" | "dreadful" | "enigmatical" | "little" | "moist" | "red"
@@ -24,35 +25,37 @@ parser = nltk.ChartParser(grammar)
 
 def main():
 
-    # If filename specified, read sentence from file
-    if len(sys.argv) == 2:
-        with open(sys.argv[1]) as f:
-            s = f.read()
+    # # If filename specified, read sentence from file
+    # if len(sys.argv) == 2:
+    #     with open(sys.argv[1]) as f:
+    #         s = f.read()
 
-    # Otherwise, get sentence as input
-    else:
-        s = input("Sentence: ")
+    # # Otherwise, get sentence as input
+    # else:
+    #     s = input("Sentence: ")
+    for i in range (1,11):
+        filename = fr"C:\Users\daniil.navodey\Documents\CS50\parser\sentences\{i}.txt"
+        
+        # Convert input into list of words
+        s = preprocess(open(filename).read())
 
-    # Convert input into list of words
-    s = preprocess(s)
+        # Attempt to parse sentence
+        try:
+            trees = list(parser.parse(s))
+        except ValueError as e:
+            print(e)
+            return
+        if not trees:
+            print("Could not parse sentence.")
+            return
 
-    # Attempt to parse sentence
-    try:
-        trees = list(parser.parse(s))
-    except ValueError as e:
-        print(e)
-        return
-    if not trees:
-        print("Could not parse sentence.")
-        return
+        # Print each tree with noun phrase chunks
+        for tree in trees:
+            tree.pretty_print()
 
-    # Print each tree with noun phrase chunks
-    for tree in trees:
-        tree.pretty_print()
-
-        print("Noun Phrase Chunks")
-        for np in np_chunk(tree):
-            print(" ".join(np.flatten()))
+            print("Noun Phrase Chunks")
+            for np in np_chunk(tree):
+                print(" ".join(np.flatten()))
 
 
 def preprocess(sentence):
@@ -62,7 +65,10 @@ def preprocess(sentence):
     and removing any word that does not contain at least one alphabetic
     character.
     """
-    raise NotImplementedError
+    result = sentence.split()
+    for word in result:
+        for letter in 
+        if "!§$%&/\}][{^°()=?`´+*~-_.:,;" 
 
 
 def np_chunk(tree):
