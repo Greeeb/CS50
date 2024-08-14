@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-PATH = r"C:\Users\daniil.navodey\Documents\CS50"
+PATH = os.path.abspath(os.curdir)  # thange this path if you want to inspect another directory
 REQUIREMENTS_FILENAME = "general_requirement.txt"
 SEARCH_FILENAME = "requirements.txt"
 
