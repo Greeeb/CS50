@@ -74,7 +74,8 @@ def preprocess(sentence):
     result = sentence.split()
 
     # delete dot at the end of the sentennce
-    result[-1] = result[-1][:-1]
+    for i in range(len(result)):
+        result[i] = result[i][:-1] if result[i][-1] in "!§$%&/()=.,-;:_" else result[i]
 
     # lower every word
     result = [result[i].lower() for i in range(len(result))]  
