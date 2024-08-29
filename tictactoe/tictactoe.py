@@ -46,7 +46,7 @@ def actions(board):
         for j in range(len(board[i])):
             if board[i][j] == EMPTY:
                 actions.append((i, j))
-    return actions
+    return set(actions)
 
 
 def result(board, action):
@@ -99,7 +99,7 @@ def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    if (winner(board) != None) or (actions(board) == []):
+    if (winner(board) != None) or (list(actions(board)) == []):
         return True
     else:
         return False
@@ -121,13 +121,8 @@ def printb(board):
         print(row)
     print(" ")
 
-import time
 def minimax(board):
-    t0 = time.time()
     (_, action) = minimax_inner(board)
-    t1 = time.time()
-    total = t1-t0
-    print(total)
     return action
                 
 
@@ -139,16 +134,16 @@ def minimax_inner(board):
     
     if terminal(board): return (utility(board), None)
     
-    for action in actions(board):
+    for action in list(actions(board)):
         (score, act) = minimax_inner(result(copy.deepcopy(board), action))
         scores.append(score)
         
     if player(board) == X:
         for i in range(len(scores)):
-            if scores[i] == max(scores): return (scores[i], actions(board)[i])
+            if scores[i] == max(scores): return (scores[i], list(actions(board))[i])
     else:
         for i in range(len(scores)):
-            if scores[i] == min(scores): return (scores[i], actions(board)[i])
+            if scores[i] == min(scores): return (scores[i], list(actions(board))[i])
 
         
         

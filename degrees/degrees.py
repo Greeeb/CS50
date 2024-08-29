@@ -59,9 +59,9 @@ def main():
     directory = sys.argv[1] if len(sys.argv) == 2 else "large"
     """
     if input("1-large or 2-small?") == "1":
-        directory = os.path.abspath(os.getcwd()) + "/large"
+        directory = os.path.abspath(os.getcwd()) + "/degrees/large"
     else:
-        directory = os.path.abspath(os.getcwd()) + "/small"
+        directory = os.path.abspath(os.getcwd()) + "/degrees/small"
     # Load data from files into memory
     print("Loading data...")
     load_data(directory)
@@ -97,6 +97,9 @@ def shortest_path(source, target):
 
     If no possible path, returns None.
     """
+    if source == target:
+        return []
+    
     source_node = Node((None, source), None)
     queue = QueueFrontier()
     queue.add(source_node)
@@ -116,7 +119,7 @@ def shortest_path(source, target):
                 return path
         print(len(queue.frontier))
         queue.remove()
-        if queue.empty():
+        if queue.empty() or len(queue.frontier) == len(names):
             break
     return None     
 
