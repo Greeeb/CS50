@@ -191,13 +191,15 @@ class MinesweeperAI():
         nearby_cells = []
         for i in range(max(cell[0] - 1, 0), min(cell[0] + 2, self.height)):
             for j in range(max(cell[1] - 1, 0), min(cell[1] + 2, self.width)):
-                if ((i, j) != cell) and not ((i, j) in self.mines) and not ((i, j) in self.safes):
+                if ((i, j) != cell) and ((i, j) not in self.mines) and ((i, j) not in self.safes):
                     nearby_cells.append((i,j))
+
+        return nearby_cells
 
     def print_knowledge_base(self):
         print("Knowledge base:")
         for knowledge in self.knowledge:
-            if knowledge.count != 0:
+            if knowledge.count != 0 and knowledge.cells != set():
                 print(knowledge.cells, " - ", knowledge.count)
         print(" ")
 
@@ -221,62 +223,40 @@ class MinesweeperAI():
         
         # mark the cell as safe
         self.mark_safe(cell)
+        self.print_knowledge_base()
         
         # add a new sentence to the AI's knowledge base 
         # based on the value of `cell` and `count`
         nearby_cells = self.nearby_cells(cell)
-
-        if nearby_cells != None:
-            for knowledge in self.knowledge:
-                if knowledge.cells.issubset(set(nearby_cells)):
-                    for item in list(knowledge.cells):
-                        nearby_cells = nearby_cells.remove(item)
-                    count = count - (len(list(knowledge.cells)) + 1)
-            # print("New before:", nearby_cells, " - ", count)
-            temp = nearby_cells
-            for cell in nearby_cells:
-                if cell in self.mines:
-                    count -= 1
-                    temp.remove(cell)
-                elif cell in self.safes:
-                    temp.remove(cell)
-            nearby_cells = temp
-            if nearby_cells != set():
-                self.knowledge.append(Sentence(cells=nearby_cells,
-                                        count=count))
-            # print("New after:", nearby_cells, " - ", count)  
-
-        # mark any additional cells as safe or as mines
-        # if it can be concluded based on the AI's knowledge base
-        if count < 1:
-            for cell in nearby_cells:
-                self.mark_safe(cell)
-        if count == len(nearby_cells):
-            for cell in nearby_cells:
-                self.mark_mine(cell)
-        if self.mines != set():
-            for mine in self.mines:
-                self.mark_mine(mine)
-                
+        self.knowledge.append(Sentence(cells=nearby_cells, count=count))
                 
         for knowledge in self.knowledge:
-            if len(knowledge.cells) == knowledge.count:
+            if len(knowledge.cells) == knowledge.count and knowledge.count != 0:
                 temp = copy.deepcopy(knowledge.cells)
                 for cell in temp:
                     self.mark_mine(cell)
                     knowledge.mark_mine(cell)
-                    
-                
-        
+            if knowledge.count == 0 and len(knowledge.cells) != 0:
+                temp = copy.deepcopy(knowledge.cells)
+                for cell in temp:
+                    self.mark_safe(cell)
+                    knowledge.mark_safe(cell)
+                              
         # add any new sentences to the AI's knowledge base
         # if they can be inferred from existing knowledge
-        """for i in range(len(self.knowledge)):
-            sentence = self.knowledge[i]
-            for j in range(len(self.knowledge)):
-                subset = self.knowledge[j] if j > i else self.knowledge[i]
-                if (sentence.cells != subset.cells) and (subset.cells.issubset(sentence.cells)):
-                    self.knowledge[i] = Sentence(cells=(sentence.cells-subset.cells), count=(sentence.count-subset.count))
-                    print("Update: ", sentence.cells-subset.cells, " - ", sentence.count-subset.count)"""
+        
+        if len(self.knowledge) > 1:
+            temp = copy.deepcopy(self.knowledge)
+            for knowledge in temp:
+                for comparison in temp:
+                    if comparison != knowledge and comparison.cells != set() and knowledge.cells != set() and knowledge.cells.issubset(comparison.cells):
+                        print("knowledge: ", knowledge)
+                        print("comparison: ", comparison)
+                        for x in knowledge:
+                            comparison.cells.remove(x)
+                        self.knowledge.append(Sentence(cells=comparison.cells,
+                                                       count=knowledge.count-comparison.count))
+                        print("new: ", knowledge.cells-comparison.cells)
 
     def make_safe_move(self):
         """
@@ -287,13 +267,12 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        """try:"""
         safes = list(self.safes) # [::-1]
+        print(safes)
         for cell in safes:
             if cell not in self.moves_made:
                 return cell
-        """except:
-            pass"""
+        return None
         
     def make_random_move(self):
         """
@@ -302,7 +281,11 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        while True:
-            (i, j) = (random.randrange(0,self.height-1,1), random.randrange(0,self.width-1,1))
-            if ((i, j) not in self.moves_made) and ((i, j) not in self.mines):
-                return (i, j)
+        all_cells = list(itertools.product(range(8), repeat=2))
+        if self.moves_made != []:
+            for move in self.moves_made:
+                all_cells.remove(move)
+        if self.mines != []:
+            for move in self.mines:
+                all_cells.remove(move)
+        return all_cells[random.randint(0, len(all_cells)-1)]
