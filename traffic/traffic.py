@@ -2,11 +2,12 @@ import cv2
 import numpy as np
 import os
 import sys
+#import matplotlib
 import tensorflow as tf
 from tensorflow.keras import layers, models
 
 from sklearn.model_selection import train_test_split
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 EPOCHS = 10
 IMG_WIDTH = 30
@@ -17,13 +18,18 @@ TEST_SIZE = 0.4
 
 def main():
 
-    """# Check command-line arguments
+    # filepath = os.path.abspath(sys.argv[0] + f"{os.sep}..")
+
+    # # Get image arrays and labels for all image files
+    # images, labels = load_data(filepath) # sys.argv[1])
+    
+    
+    # Check command-line arguments
     if len(sys.argv) not in [2, 3]:
-        sys.exit("Usage: python traffic.py data_directory [model.h5]")"""
-    filepath = os.path.abspath(sys.argv[0] + f"{os.sep}..")
+        sys.exit("Usage: python traffic.py data_directory [model.h5]")
 
     # Get image arrays and labels for all image files
-    images, labels = load_data(filepath) # sys.argv[1])
+    images, labels = load_data(sys.argv[1])
 
     # Split data into training and testing sets
     labels = tf.keras.utils.to_categorical(labels)
@@ -51,11 +57,16 @@ def main():
     print([np.argmax(prediction[i], 0) for i in range(30)])
     print([np.argmax(y_test[i], 0) for i in range(30)])
 
-    # saving a model to a file to be able to reuse the model
-    filename = fr"C:\Users\daniil.navodey\Documents\CS50\traffic\model.keras"
-    model.save(filename)
-    print(f"Model saved to {filename}.")
+    # # saving a model to a file to be able to reuse the model
+    # filename = fr"C:\Users\daniil.navodey\Documents\CS50\traffic\model.keras"
+    # model.save(filename)
+    # print(f"Model saved to {filename}.")
 
+    # Save model to file
+    if len(sys.argv) == 3:
+        filename = sys.argv[2]
+        model.save(filename)
+        print(f"Model saved to {filename}.")
 
 def load_data(data_dir):
     """
@@ -78,7 +89,9 @@ def load_data(data_dir):
 
     for i in tqdm.tqdm(range(NUM_CATEGORIES)):
         # joining the filepath to each folder
-        filepath = os.path.abspath(f"traffic/gtsrb/{i}")
+        # filepath = os.path.abspath(f"traffic/gtsrb/{i}")
+        filepath = os.path.join(data_dir, str(i))
+
 
         # traversing through all the riles in directory & appending images and labels array with data from the file
         for file in os.listdir(filepath):
@@ -106,7 +119,7 @@ def get_model():
     """
     model = models.Sequential([
         # tf.keras.Input((IMG_WIDTH, IMG_HEIGHT, 3)),
-        layers.Conv2D(64, (3, 3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3), batch_size=None),
+        layers.Conv2D(64, (3, 3), activation='relu', input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
         layers.MaxPooling2D(2, 2),
         layers.Conv2D(32, (3, 3), activation='relu'),
         layers.MaxPooling2D(2, 2),

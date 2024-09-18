@@ -175,6 +175,8 @@ class CrosswordCreator():
         for variable in assignment.keys():
             if len(assignment[variable]) != 1:
                 return False
+            else:
+                pass
         return True
 
     def consistent(self, assignment):
@@ -227,7 +229,7 @@ class CrosswordCreator():
                     counter +=1
             constrains[value] = counter
         # print("constrains", constrains)
-        return list({k: v for k, v in sorted(constrains.items(), key=lambda item: item[1])}.keys())
+        return list({k: v for k, v in sorted(constrains.items(), key=lambda item: item[0])}.keys())
 
         
     def select_unassigned_variable(self, assignment):

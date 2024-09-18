@@ -77,7 +77,7 @@ class NimAI():
         Initialize AI with an empty Q-learning dictionary,
         an alpha (learning) rate, and an epsilon rate.
 
-        The Q-learning dictionary maps `(state, action)`
+        The Q-learning dictionary maps `(tuple(state), action)`
         pairs to a Q-value (a number).
          - `state` is a tuple of remaining piles, e.g. (1, 1, 4, 4)
          - `action` is a tuple `(i, j)` for an action
@@ -101,9 +101,11 @@ class NimAI():
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
-        try:
-            return self.q[state, action]
-        except:
+        # print(self.q)
+        temp = (tuple(state), action)
+        if temp in list(self.q.keys()):
+            return self.q[(tuple(state), action)]
+        else:
             return 0
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
@@ -121,16 +123,16 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        self.q[(tuple(state), tuple(action))] = old_q + self.alpha * (reward + future_rewards - old_q)
+        self.q[(tuple(state), action)] = old_q + self.alpha * (reward + future_rewards - old_q)
         
 
     def best_future_reward(self, state):
         """
-        Given a state `state`, consider all possible `(state, action)`
+        Given a state `state`, consider all possible `(tuple(state), action)`
         pairs available in that state and return the maximum of all
         of their Q-values.
 
-        Use 0 as the Q-value if a `(state, action)` pair has no
+        Use 0 as the Q-value if a `(tuple(state), action)` pair has no
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
@@ -142,10 +144,10 @@ class NimAI():
         
         for action in actions:
             try:
-                qs.append(self.q[state, action])
+                qs.append(self.q[(tuple(state), action)])
             except:
                 qs.append(0)
-        
+
         return max(qs)
 
     def choose_action(self, state, epsilon=True):
@@ -170,17 +172,23 @@ class NimAI():
             epsilon = self.epsilon
         else: epsilon = 0
         
-        maximum = 0
+        action = possible_actions[0]
+        try:
+            maximum = self.q[(tuple(state), action)]
+        except:
+            maximum = 0
+        
         for a in possible_actions:
             try:
-                if self.q[state, a] > maximum:
+                if self.q[(tuple(state), a)] > maximum:
                     action = a
-                    maximum = self.q[state, a]
+                    maximum = self.q[(tuple(state), a)]
             except:
-                action = a
-                maximum = 0
+                pass
         
-        return random.choices([action, random.choice(possible_actions)], [1 - epsilon, epsilon])[0]
+
+        result = random.choices([action, random.choice(possible_actions)], [1 - epsilon, epsilon])[0]
+        return result
 
 
 def train(n):

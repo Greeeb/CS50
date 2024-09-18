@@ -119,23 +119,25 @@ def evaluate(labels, predictions):
     actual negative labels that were accurately identified.
     """
     sensitivity = 0
+    true_positive = 0
     false_positive = 0
     specificity = 0
+    true_negative = 0
     false_negative = 0
     
     for (prediction, label) in zip(predictions, labels):
         if prediction == label:
             if prediction == 1:
-                sensitivity += 1
+                true_positive += 1
             else:
-                specificity += 1
+                true_negative += 1
         elif prediction == 1:
             false_positive += 1
         else: 
             false_negative += 1
     
-    sensitivity = sensitivity/(sensitivity + false_positive)
-    specificity = specificity/(specificity + false_negative)
+    sensitivity = true_positive/(true_positive + false_negative)
+    specificity = true_negative/(true_negative + false_positive)
     
     return sensitivity, specificity
     
