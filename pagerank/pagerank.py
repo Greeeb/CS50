@@ -12,7 +12,7 @@ def main():
     """if len(sys.argv) != 2:
         sys.exit("Usage: python pagerank.py corpus")"""
     for i in range(3):
-        corpus = crawl(fr"c:/Users/daniil.navodey/Documents/CS50/pagerank/corpus{i}")
+        corpus = crawl(fr"C:\Users\memen\THI\CS50\pagerank\corpus{i}")
         ranks = sample_pagerank(corpus, DAMPING, SAMPLES)
         print(f"PageRank Results from Sampling (n = {SAMPLES})")
         for page in sorted(ranks):
@@ -91,7 +91,7 @@ def sample_pagerank(corpus, damping_factor, n):
 
     Return a dictionary where keys are page names, and values are
     their estimated PageRank value (a value between 0 and 1). All
-    PageRank values should sum to 1.
+    PageRank values should summ to 1.
     """
     global_page_rank = {}
     for key in corpus.keys():
@@ -113,19 +113,6 @@ def sample_pagerank(corpus, damping_factor, n):
     return global_page_rank
 
 
-def iterative_calculation(corpus, page, page_rank, damping_factor):
-    sum = 0
-    counter = 0
-    for start_page in corpus.keys():
-        if start_page != page and page in corpus[start_page]:
-            sum += page_rank[start_page]
-            counter += 1
-
-    page_rank[page] = (1-damping_factor)/len(corpus) + damping_factor*sum/counter
-    # print(page_rank[page])
-    
-    return page_rank
-
 
 def iterate_pagerank(corpus, damping_factor):
     """
@@ -134,24 +121,32 @@ def iterate_pagerank(corpus, damping_factor):
 
     Return a dictionary where keys are page names, and values are
     their estimated PageRank value (a value between 0 and 1). All
-    PageRank values should sum to 1.
+    PageRank values should summ to 1.
     """
-    import copy
-    global_page_rank = {}
     N = len(corpus)
-    accuracy = 1.000
-    
-    for key in corpus.keys():
-        global_page_rank[key] = 1 / N
-    
-    while accuracy > 0.01:
-        page = random.choices(list(corpus.keys()), list(global_page_rank.values()))[0]
-        temp_page_rank = iterative_calculation(corpus, page, copy.deepcopy(global_page_rank), damping_factor)
-        accuracy = abs(temp_page_rank[page] - global_page_rank[page]) if corpus[page] != set() else 1
-        global_page_rank = copy.deepcopy(temp_page_rank)
-    
-    print(corpus)
-    return global_page_rank
+    page_rank = {page: 1 / N for page in corpus}
+    accuracy = 0.001 
+
+    while True:
+        new_rank = {}
+        for page in corpus:
+            total = 0
+            for possible_page in corpus:
+                links = corpus[possible_page]
+                if not links:
+                    total += page_rank[possible_page] / N
+                elif page in links:
+                    total += page_rank[possible_page] / len(links)
+
+            new_rank[page] = (1 - damping_factor) / N + damping_factor * total
+
+        if all(abs(new_rank[p] - page_rank[p]) < accuracy for p in page_rank):
+            break
+
+        page_rank = new_rank
+
+    return page_rank
+
 
 
 if __name__ == "__main__":

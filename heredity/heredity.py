@@ -44,7 +44,7 @@ def main():
     """if len(sys.argv) != 2:
         sys.exit("Usage: python heredity.py data.csv")"""
     for i in range(3):
-        path = f"c:/Users/daniil.navodey/Documents/CS50/heredity/data/family{i}.csv"
+        path = fr"C:\Users\memen\THI\CS50\heredity\data\family{i}.csv"
         people = load_data(path)# sys.argv[1])
 
         # Keep track of gene and trait probabilities for each person
@@ -142,73 +142,47 @@ def joint_probability(people, one_gene, two_genes, have_trait):
         * everyone in set `have_trait` has the trait, and
         * everyone not in set` have_trait` does not have the trait.
     """
-    p = []
-    family = {"parents": {},
-             "child": None}
-    temp = None
-    for x in people.keys():
-        if people[x]["mother"] == None:
-            family["parents"][x] = None
-        else: temp = x
-    family["child"] = temp
-    # family = {"parents": {"first": None, "second": None}, "child": "third"}
-    
-    # parents
-    for parent in family["parents"].keys():
-        if (parent not in one_gene) and (parent not in two_genes):
-            i = 0
+    probability = 1
+
+    for person in people:
+        mother = people[person]["mother"]
+        father = people[person]["father"]
+
+        if person in two_genes:
+            gene_count = 2
+        elif person in one_gene:
+            gene_count = 1
         else:
-            i = 1 if parent in one_gene else 2 
-            
-        trait = False if parent not in have_trait else True
-        
-        p.append(PROBS["gene"][i] * PROBS["trait"][i][trait])
-        family["parents"][parent] = i
-    
-    # child
-    child_name = family["child"]
-    if (child_name not in one_gene) and (child_name not in two_genes):
-        i = 0
-    else:
-        i = 1 if child_name in one_gene else 2 
-            
-    trait = False if parent not in have_trait else True
-    
-    probability = 0
-    i1 = family["parents"][list(family["parents"].keys())[0]]
-    i2 = family["parents"][list(family["parents"].keys())[1]]
-    
-    if i1==i2:
-        if i==1:
-            probability = (1-PROBS["mutation"])*PROBS["mutation"]*2 if i1!=1 else (1-PROBS["mutation"])*PROBS["mutation"]*0.25
-        elif i==2:
-            if i1==0:
-                probability = PROBS["mutation"]**2
+            gene_count = 0
+
+        has_trait = person in have_trait
+
+        if mother is None and father is None:
+            gene_prob = PROBS["gene"][gene_count]
+        else:
+            def pass_prob(parent):
+                if parent in two_genes:
+                    return 1 - PROBS["mutation"]
+                elif parent in one_gene:
+                    return 0.5
+                else:
+                    return PROBS["mutation"]
+
+            mom_pass = pass_prob(mother)
+            dad_pass = pass_prob(father)
+
+            if gene_count == 2:
+                gene_prob = mom_pass * dad_pass
+            elif gene_count == 1:
+                gene_prob = mom_pass * (1 - dad_pass) + (1 - mom_pass) * dad_pass
             else:
-                probability = (1-PROBS["mutation"])**2*i1/2*i2/2
-        else:
-            if i1==0:
-                probability = (1-PROBS["mutation"])**2
-            else:
-                probability = PROBS["mutation"]**2*i1/2*i2/2
-    elif i1==0 or i2==0:
-        if i!=1:
-            probability = (1-PROBS["mutation"])*PROBS["mutation"]*(i1+i2)/2
-        else:
-            probability = (PROBS["mutation"]**2 + (1-PROBS["mutation"])**2)*(i1+i2)/2
-    else:
-        if i==0:
-            probability = PROBS["mutation"]**2 * 0.5
-        elif i==1:
-            probability = (1-PROBS["mutation"])*PROBS["mutation"]
-        else:
-            probability = (1-PROBS["mutation"])**2 * 0.5
-            
-    
-    probability = probability * PROBS["trait"][i][trait]
-    
-    p.append(probability)
-    return p[0] * p[1] * p[2]
+                gene_prob = (1 - mom_pass) * (1 - dad_pass)
+
+        trait_prob = PROBS["trait"][gene_count][has_trait]
+        probability *= gene_prob * trait_prob
+
+    return probability
+
         
 
 

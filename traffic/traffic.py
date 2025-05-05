@@ -2,12 +2,10 @@ import cv2
 import numpy as np
 import os
 import sys
-#import matplotlib
 import tensorflow as tf
 from tensorflow.keras import layers, models
 
 from sklearn.model_selection import train_test_split
-#from matplotlib import pyplot as plt
 
 EPOCHS = 10
 IMG_WIDTH = 30
